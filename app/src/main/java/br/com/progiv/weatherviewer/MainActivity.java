@@ -41,51 +41,48 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        Toolbar toolbar = (Toolbar)findViewById(R.id.toolbar);
+        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
-        //criar ArrayAdapter para vincular weatherList a weahterListView;
+        //cria ArrayAdapter para vincular weatherList a weatherListView
         weatherListView = (ListView) findViewById(R.id.weatherListView);
         weatherArrayAdapter = new WeatherArrayAdapter(this, weatherList);
         weatherListView.setAdapter(weatherArrayAdapter);
 
-        //configura o botão FAB para ocultar o teclado e iniciar a solicitação ao webservice:
+        //Configura FAB para ocultar o teclado e iniciar a solicitação ao webservice
         FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
-        fab.setOnClickListener(
-                new View.OnClickListener(){
-                    @Override
-                    public void onClick(View v) {
-                        //obter o texto de locationEditText e criar a URL do webservice
-                        EditText locationEditText = (EditText) findViewById(R.id.locationEditText);
-                        URL url = createURL(locationEditText.getText().toString());
+        fab.setOnClickListener(new View.OnClickListener(){
+            @Override
+            public void onClick(View v) {
+                //obtém texto de locationEditText e cria a URL do webservice
+                EditText locationEditText = (EditText) findViewById(R.id.locationEditText);
+                URL url = createURL(locationEditText.getText().toString());
 
-                        //ocultar o teclado e iniciar um GetWeatherTask para o download
-                        // de dados climáticos de OpenWeatherMap.org em uma thread separada:
-                        if(url != null){
-                            dismissKeyboard(locationEditText);
-                            GetWeatherTask getLocalWeatherTask = new GetWeatherTask();
-                            getLocalWeatherTask.execute(url);
-                        }else{
-                            Snackbar.make(findViewById(R.id.coordinatorLayout), R.string.invalid_url, Snackbar.LENGTH_LONG).show();
-                        }
-                    }
+                //oculta o teclado e inicia uma GetWeatherTask para o download
+                // de dados climáticos de OpenWeatherMap.org em uma thread separada
+                if(url != null){
+                    dismissKeyboard(locationEditText);
+                    GetWeatherTask getLocalWeatherTask = new GetWeatherTask();
+                    getLocalWeatherTask.execute(url);
+                }else{
+                    Snackbar.make(findViewById(R.id.coordinatorLayout), R.string.invalid_url, Snackbar.LENGTH_LONG).show();
                 }
-        );
+            }
+        });
     }
-
-    //remover o teclado via código quando o usuário pressionar o botao FAB
-    private void dismissKeyboard(View view){
+    //remove o teclado via código quando o usuário pressionar o botao FAB
+    private void dismissKeyboard(View view) {
         InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
         imm.hideSoftInputFromWindow(weatherListView.getWindowToken(), 0);
     }
 
-    //criar a URL do webservice usando a cidade:
+    //cria a URL do webservice de openweathermap.org usando cidade:
     private URL createURL(String cidade){
         String apiKey = getString(R.string.api_key);
         String baseURL = getString(R.string.web_service_url);
         try{
-            //cria a url para a cidade e para as unidade específica (Fahrenheit) ????
-            String urlString = baseURL + URLEncoder.encode(cidade, "UTF-8") + "&units=imperial&cnt=16;appid=" + apiKey;
+            //cria a url para a cidade e para as unidade específicas (Fahrenheit)
+            String urlString = baseURL + URLEncoder.encode(cidade, "UTF-8") + "&units=imperial&cnt=16&appid=" + apiKey; // para Celsius = metric
             return  new URL(urlString);
         }catch (Exception e){
             e.printStackTrace();
@@ -93,11 +90,12 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    // fazer a chamada ao webservice REST para obter os dados e os salvar em um arquivo local:
-    private class GetWeatherTask extends AsyncTask<URL, Void, JSONObject>{
+    //faz a chamada ao webservice REST para obter os dados e os salva em um arquvio HTML local
+    private class GetWeatherTask extends AsyncTask<URL, Void, JSONObject> {
         @Override
         protected JSONObject doInBackground(URL... urls) {
             HttpURLConnection connection = null;
+
             try{
                 connection = (HttpURLConnection) urls[0].openConnection();
                 int response = connection.getResponseCode();
@@ -127,26 +125,28 @@ public class MainActivity extends AppCompatActivity {
 
         @Override
         protected void onPostExecute(JSONObject jsonObject) {
-            convertJSONtoArrayList(jsonObject); //preencher weatherList novamente:
-            weatherArrayAdapter.notifyDataSetChanged(); //vincula a listview novamente;
-            weatherListView.smoothScrollByOffset(0); //rola o scrollbar para o topo
+            convertJSONtoArrayList(jsonObject); //preenche weatherList novamente
+            weatherArrayAdapter.notifyDataSetChanged(); //vincula a listview novamente
+            weatherListView.smoothScrollByOffset(0); //rola para o topo
         }
     }
 
+    //cria objetos weather a partir do JSONObject que contém a previsão
     private void convertJSONtoArrayList(JSONObject forecast){
-        weatherList.clear(); //apaga os dados climáticos antigos;
+        weatherList.clear(); //apara os dados climáticos antigos
         try{
-            //obtem a list JSONArray da prvisão:
+            //obtem a lista JSONArray da previsão
             JSONArray list = forecast.getJSONArray("list");
-            //converter cada elemento da lista em um objeto Weather
+            //convert cada elemento da lista em um objeto Wather
             for(int i = 0; i < list.length(); ++i){
                 JSONObject day = list.getJSONObject(i); //obtem os dados de um dia
-                //temperaturas:
+                //obtem o JSONObject das temperaturas do dia ("temp")
                 JSONObject temperatures = day.getJSONObject("temp");
 
+                //obtém o JSONObject "weather" do dia para a descricao e para o ícone
                 JSONObject weather = day.getJSONArray("weather").getJSONObject(0);
 
-                //adiciona novo objeto Weather a weatherList:
+                //adiciona novo objeto Weather a wetherList:
                 weatherList.add(new Weather(
                         day.getLong("dt"), //data e hora
                         temperatures.getDouble("min"),
