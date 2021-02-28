@@ -13,15 +13,25 @@ public class Weather {
     public final String humidity;
     public final String description;
     public final String iconURL;
+    public String celsius;
 
+
+
+    public String convertFahrenheitCelsius(String temp){
+        celsius = String.valueOf((Integer.parseInt(temp)-32)*(0.5556));
+        return celsius;
+    }
+    
     public Weather(long timeStamp, double minTemp, double maxTemp, double humidity, String description, String iconName){
         //NumberFormat para formatar temperaturas em double arredondando-as em inteiros:
         NumberFormat numberFormat = NumberFormat.getInstance();
         numberFormat.setMaximumFractionDigits(0);
 
         this.dayOfWeek = convertTimeStampToDay(timeStamp);
-        this.minTemp = numberFormat.format(minTemp) + "\u00B0F";
-        this.maxTemp = numberFormat.format(maxTemp) + "\u00B0F";
+
+        this.minTemp = convertFahrenheitCelsius(numberFormat.format(minTemp)) + "\u00B0C";
+        this.maxTemp = convertFahrenheitCelsius(numberFormat.format(maxTemp)) + "\u00B0C";
+
         this.humidity = NumberFormat.getPercentInstance().format(humidity / 100.0);
         this.description = description;
         this.iconURL = "http://openweathermap.org/img/w/" + iconName + ".png";
